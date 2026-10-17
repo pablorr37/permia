@@ -10,6 +10,8 @@ import {
   horarioValido,
   solicitarVerificacion,
   revisarSolicitudVerificacion,
+  exigirPuedeCrearTienda,
+  listarSucursales,
   type HorarioTienda,
 } from "./tiendas";
 
@@ -713,5 +715,55 @@ describe("rubro de la tienda (17-rubros-categorias.md)", () => {
     await expect(actualizarTienda(usuario, tienda.id, { rubroId: "no-existe" })).rejects.toMatchObject({
       code: "RUBRO_NO_ENCONTRADO",
     });
+  });
+});
+
+describe("tienda única (22-instalacion.md §3)", () => {
+  let admin: Usuario;
+  let dueno: Usuario;
+  let comun: Usuario;
+  const datos = { nombre: "Sucursal", direccion: "Calle 1", lat: LAT_BASE, lon: LON_BASE };
+
+  beforeEach(async () => {
+    admin = await crearUsuarioDePrueba();
+    await prisma.usuario.update({ where: { id: admin.id }, data: { esAdmin: true } });
+    admin = { ...admin, esAdmin: true };
+    dueno = await crearUsuarioDePrueba();
+    comun = await crearUsuarioDePrueba();
+  });
+  afterEach(() => limpiar([admin.id, dueno.id, comun.id]));
+
+  it("exigirPuedeCrearTienda: el admin siempre puede", async () => {
+    await expect(exigirPuedeCrearTienda(admin)).resolves.toBeUndefined();
+  });
+
+  it("exigirPuedeCrearTienda: el propietario de una tienda puede sumar sucursales", async () => {
+    await crearTienda(dueno, datos);
+    await expect(exigirPuedeCrearTienda(dueno)).resolves.toBeUndefined();
+  });
+
+  it("exigirPuedeCrearTienda: cualquier otro usuario recibe CREAR_TIENDA_NO_PERMITIDO", async () => {
+    await expect(exigirPuedeCrearTienda(comun)).rejects.toMatchObject<Partial<AppError>>({ code: "CREAR_TIENDA_NO_PERMITIDO" });
+  });
+
+  it("el admin no tiene tope de tiendas por plan", async () => {
+    await crearTienda(admin, datos);
+    await expect(crearTienda(admin, { ...datos, nombre: "Sucursal 2" })).resolves.toMatchObject({ nombre: "Sucursal 2" });
+  });
+
+  it("listarSucursales: solo activas de cuentas activas, de la más antigua a la más nueva", async () => {
+    const primera = await crearTienda(admin, { ...datos, nombre: "Casa central" });
+    const segunda = await crearTienda(admin, { ...datos, nombre: "Sucursal norte" });
+    const inactiva = await crearTienda(dueno, { ...datos, nombre: "Cerrada" });
+    await prisma.tienda.update({ where: { id: inactiva.id }, data: { activa: false } });
+    const dePausado = await crearTienda(comun, { ...datos, nombre: "De cuenta pausada" });
+    await prisma.usuario.update({ where: { id: comun.id }, data: { estadoCuenta: "pausada" } });
+
+    const ids = (await listarSucursales()).map((t) => t.id);
+    expect(ids).toContain(primera.id);
+    expect(ids).toContain(segunda.id);
+    expect(ids.indexOf(primera.id)).toBeLessThan(ids.indexOf(segunda.id));
+    expect(ids).not.toContain(inactiva.id);
+    expect(ids).not.toContain(dePausado.id);
   });
 });

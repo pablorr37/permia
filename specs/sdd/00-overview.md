@@ -36,6 +36,8 @@ Módulos agregados después del MVP inicial:
     categorías de producto que mantiene el admin.
 17. [`21-temas.md`](21-temas.md) — tema de la instalación según su rubro (bebidas,
     vinos, vivero, almacén): paleta, tipografía, ícono y textos.
+18. [`22-instalacion.md`](22-instalacion.md) — tienda única (con sucursales),
+    provincia, logo y selector de tema desde el admin; sin datos de demo.
 
 Todavía fuera de alcance (a especificar después): promociones, balance/reportes,
 entrega a domicilio (delivery), chat in-app, y las fases 2 a 6 del itinerario.

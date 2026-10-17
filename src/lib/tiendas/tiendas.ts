@@ -5,7 +5,7 @@ import { Prisma } from "@/generated-prisma/client";
 import type { Usuario } from "@/lib/auth/auth";
 import { requireAdmin } from "@/lib/auth/auth";
 import type { Plan, EstadoVerificacion } from "@/generated-prisma/client";
-import { SAN_JUAN } from "@/lib/alcance/alcance";
+import { parsearProvincia, PROVINCIA_POR_DEFECTO, type Provincia } from "@/lib/region/provincias";
 import { MAX_TIENDAS } from "@/lib/planes/limites";
 import { normalizarCuit } from "./cuit";
 import { CONDICIONES_IVA, type CondicionIva } from "@/lib/precios/precios";
@@ -259,7 +259,8 @@ export async function crearTienda(usuario: Usuario, input: CrearTiendaInput): Pr
   // toma el plan del dueño (20-precios-facturacion.md).
   const dueno = await prisma.usuario.findUniqueOrThrow({ where: { id: usuario.id }, select: { plan: true } });
   const propias = await prisma.tienda.count({ where: { vendedorId: usuario.id } });
-  if (propias >= MAX_TIENDAS[dueno.plan]) {
+  // 22-instalacion.md: el admin (el negocio de la instalación) no tiene tope.
+  if (!usuario.esAdmin && propias >= MAX_TIENDAS[dueno.plan]) {
     throw new AppError(
       "LIMITE_TIENDAS_PLAN",
       `Tu plan permite hasta ${MAX_TIENDAS[dueno.plan]} ${MAX_TIENDAS[dueno.plan] === 1 ? "tienda" : "tiendas"}. Mejorá tu plan para sumar sucursales.`
@@ -308,6 +309,28 @@ export async function crearTienda(usuario: Usuario, input: CrearTiendaInput): Pr
   return aTienda(fila, input.horarios ?? []);
 }
 
+// 22-instalacion.md §3: cada instalación es un solo negocio. Abren tiendas el admin
+// (el cliente) o el propietario de una tienda existente (sucursales).
+export async function exigirPuedeCrearTienda(usuario: Usuario): Promise<void> {
+  if (usuario.esAdmin) return;
+  const propias = await prisma.tienda.count({ where: { vendedorId: usuario.id } });
+  if (propias > 0) return;
+  throw new AppError("CREAR_TIENDA_NO_PERMITIDO", "Solo el negocio puede abrir tiendas y sucursales.");
+}
+
+// Sucursales del negocio (22-instalacion.md §3): tiendas activas de cuentas activas,
+// de la más antigua a la más nueva.
+export async function listarSucursales(): Promise<Tienda[]> {
+  const filas = await prisma.$queryRaw<FilaTienda[]>`
+    ${SELECT_TIENDA}
+    WHERE activa = true
+      AND vendedor_id IN (SELECT id FROM usuarios WHERE estado_cuenta = 'activa')
+    ORDER BY creada_en ASC, id ASC
+  `;
+  const horariosPorTienda = await obtenerHorariosPorTiendas(filas.map((f) => f.id));
+  return filas.map((fila) => aTienda(fila, horariosPorTienda.get(fila.id) ?? []));
+}
+
 export interface BuscarTiendasCercanasInput {
   lat: number;
   lon: number;
@@ -315,6 +338,8 @@ export interface BuscarTiendasCercanasInput {
   // 18-alcance.md: límite del radio según el alcance del usuario (el radio pedido
   // se recorta a este valor), o `null` para buscar en toda la provincia (plata).
   alcanceKm?: number | null;
+  // 22-instalacion.md §2: provincia de la instalación para "toda la provincia".
+  provincia?: Provincia;
 }
 
 export async function buscarTiendasCercanas(
@@ -328,10 +353,11 @@ export async function buscarTiendasCercanas(
 
   const radioKm = typeof input.alcanceKm === "number" ? Math.min(radioPedido, input.alcanceKm) : radioPedido;
   const origen = Prisma.sql`ST_SetSRID(ST_MakePoint(${input.lon}, ${input.lat}), 4326)::geography`;
-  // Plata: toda la provincia de San Juan (rectángulo), sin límite de radio.
+  // Plata: toda la provincia de la instalación (rectángulo), sin límite de radio.
+  const zona = (input.provincia ?? parsearProvincia(PROVINCIA_POR_DEFECTO)!).bbox;
   const filtroZona =
     input.alcanceKm === null
-      ? Prisma.sql`ubicacion::geometry && ST_MakeEnvelope(${SAN_JUAN.lonMin}, ${SAN_JUAN.latMin}, ${SAN_JUAN.lonMax}, ${SAN_JUAN.latMax}, 4326)`
+      ? Prisma.sql`ubicacion::geometry && ST_MakeEnvelope(${zona.lonMin}, ${zona.latMin}, ${zona.lonMax}, ${zona.latMax}, 4326)`
       : Prisma.sql`ST_DWithin(ubicacion, ${origen}, ${radioKm * 1000})`;
 
   const filas = await prisma.$queryRaw<Array<FilaTienda & { distancia_km: number }>>`

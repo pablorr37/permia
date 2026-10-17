@@ -4,9 +4,6 @@ import type { Plan } from "@/generated-prisma/client";
 
 // Radio de alcance del mapa según plan y puntos (18-alcance.md).
 
-// Provincia de San Juan aproximada por un rectángulo (plan plata).
-export const SAN_JUAN = { latMin: -32.6, latMax: -28.4, lonMin: -70.6, lonMax: -66.9 } as const;
-
 const RADIO_MINIMO_KM = 3;
 const RADIO_MAXIMO_KM = 15;
 

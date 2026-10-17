@@ -26,8 +26,9 @@ Reglas:
 - Un `PERMIA_RUBRO` desconocido **no rompe** el sitio: se usa `almacen` y se
   registra una advertencia en el log del servidor (`console.warn`) nombrando el valor
   recibido y los válidos.
-- No es configuración del admin (no vive en la DB): el tema se fija al instalar el
-  VPS. Un selector en el panel admin queda para otra ronda.
+- El admin puede pisar todos estos valores desde `/admin/instalacion` (guardados en
+  la DB), sin redeploy: ver [`22-instalacion.md`](22-instalacion.md), que define la
+  precedencia admin → variable de entorno → default.
 
 ## Rubros y temas
 
@@ -59,7 +60,7 @@ Los tests lo verifican para cada tema; agregar un tema que no lo cumpla hace fal
 ## Cómo se aplica
 
 - `src/app/layout.tsx` llama `await connection()` (rendering dinámico, así la variable
-  se lee en runtime) y resuelve el tema.
+  se lee en runtime) y resuelve el tema con `obtenerInstalacion()` (22-instalacion.md).
 - Las variables CSS del tema (`--color-*`, `--font-display`, `--font-sans`,
   `--radius-*`, `--shadow-cta`, `--shadow-cta-accent`) van como `style` inline en
   `<html>`. Pisan los valores por defecto de `@theme` en `globals.css`; las utilidades
@@ -143,9 +144,6 @@ export function contraste(a: string, b: string): number;
 
 ## Fuera de alcance (otras rondas)
 
-- Selector de tema desde el panel admin (sin redeploy).
-- Logo propio del cliente subido a S3 (hoy: ícono del rubro + nombre).
-- Datos de demo (seed) por rubro: tiendas, rubros y categorías de bebidas, vinos o
-  plantas. Hoy el seed sigue siendo el de almacenes de San Juan.
-- Región configurable (el radio de alcance y la vitrina siguen centrados en San Juan).
+- Selector de tema, logo y provincia desde el admin: hechos en
+  [`22-instalacion.md`](22-instalacion.md). Datos de demo: descartados (sin seed).
 - Modo oscuro.

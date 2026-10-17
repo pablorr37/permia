@@ -104,6 +104,9 @@ export default function AdminPage() {
       <h1 className="font-display text-[20px] font-bold text-primary-dark">Panel admin</h1>
 
       <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+        <Link href="/admin/instalacion" className="text-[13px] font-semibold text-accent-text">
+          Marca y tema →
+        </Link>
         <Link href="/admin/verificaciones" className="text-[13px] font-semibold text-accent-text">
           Verificaciones{verificacionesPendientes ? ` (${verificacionesPendientes})` : ""} →
         </Link>

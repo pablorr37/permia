@@ -4,7 +4,7 @@ import { subirArchivo, type TipoArchivo } from "@/lib/archivos/archivos";
 import { obtenerUsuarioActual } from "@/lib/auth/session";
 import { respuestaExitosa, respuestaError } from "@/lib/api-response";
 import { AppError } from "@/lib/errors";
-import type { Usuario } from "@/lib/auth/auth";
+import { requireAdmin, type Usuario } from "@/lib/auth/auth";
 import { tienePermiso } from "@/lib/planes/planes";
 import { verificarPermisoFotoCatalogo } from "@/lib/catalogo/catalogo";
 import { exigirPermiso } from "@/lib/equipo/equipo";
@@ -15,6 +15,12 @@ async function verificarOwnership(usuario: Usuario, tipo: TipoArchivo, entidadId
     if (entidadId !== usuarioId) {
       throw new AppError("FORBIDDEN", "Solo podés subir tu propio avatar.");
     }
+    return;
+  }
+
+  if (tipo === "logo") {
+    // Logo de la instalación (22-instalacion.md): solo el admin.
+    requireAdmin(usuario);
     return;
   }
 
@@ -40,7 +46,7 @@ async function verificarOwnership(usuario: Usuario, tipo: TipoArchivo, entidadId
   }
 }
 
-const TIPOS_VALIDOS: TipoArchivo[] = ["tienda", "producto", "catalogo", "avatar"];
+const TIPOS_VALIDOS: TipoArchivo[] = ["tienda", "producto", "catalogo", "avatar", "logo"];
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     const sp = request.nextUrl.searchParams;
     const tipo = sp.get("tipo") as TipoArchivo | null;
-    const entidadId = tipo === "avatar" ? usuario.id : sp.get("entidadId");
+    const entidadId = tipo === "avatar" ? usuario.id : tipo === "logo" ? "instalacion" : sp.get("entidadId");
     if (!tipo || !TIPOS_VALIDOS.includes(tipo) || !entidadId) {
       throw new AppError("TIPO_ARCHIVO_INVALIDO", "Faltan o son inválidos los parámetros tipo/entidadId.");
     }

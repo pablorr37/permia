@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { registrarUsuario, type Usuario } from "@/lib/auth/auth";
-import { SAN_JUAN, obtenerAlcance, proximoUmbral, radioAlcanceKm } from "./alcance";
+import { obtenerAlcance, proximoUmbral, radioAlcanceKm } from "./alcance";
 
 // 18-alcance.md
 describe("radioAlcanceKm", () => {
@@ -47,13 +47,6 @@ describe("radioAlcanceKm", () => {
   it("premium: 15 km; plata: toda la provincia (null)", () => {
     expect(radioAlcanceKm("premium", 0)).toBe(15);
     expect(radioAlcanceKm("plata", 0)).toBeNull();
-  });
-
-  it("el rectángulo de San Juan contiene a la capital", () => {
-    expect(SAN_JUAN.latMin).toBeLessThan(-31.5375);
-    expect(SAN_JUAN.latMax).toBeGreaterThan(-31.5375);
-    expect(SAN_JUAN.lonMin).toBeLessThan(-68.5364);
-    expect(SAN_JUAN.lonMax).toBeGreaterThan(-68.5364);
   });
 });
 

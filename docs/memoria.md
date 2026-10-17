@@ -14,34 +14,56 @@
 
 | Ronda | Alcance | Estado | PR |
 | --- | --- | --- | --- |
-| P1 | Clon + tema por rubro (`specs/sdd/21-temas.md`): 4 temas, marca y textos por variables, guía de VPS por cliente | Hecha | — |
-| P2 | Pendiente de definir (ver preguntas abiertas de Permia) | — | — |
+| P1 | Clon + tema por rubro (`specs/sdd/21-temas.md`): 4 temas, marca y textos por variables, guía de VPS por cliente | Hecha | (push inicial de `main`) |
+| P2 | Tienda única, sin datos demo, provincia configurable, logo y selector de tema en el admin (`specs/sdd/22-instalacion.md`) | Hecha | ver la tabla de PRs del repo |
+
+Forma de trabajo (la de Almacenia): rama por ronda, PR y merge de Claude apenas
+termina. Coolify despliega `main`.
+
+### Decisiones del usuario (2026-10-17, respuestas textuales)
+
+> 1) cada tienda es única
+> 2) sin datos demo
+> 3) Sí, región configurable por provincia
+> 4) sí, cambio de logo y selector
 
 ### Decisiones de Permia
 
 - **Un repo propio** (`pablorr37/permia`), clonado con la historia de Almacenia.
-- **Rubro por variable de entorno** (`PERMIA_RUBRO`, más `PERMIA_NOMBRE`,
-  `PERMIA_ESLOGAN`, `PERMIA_DESCRIPCION`), leída en runtime: una sola imagen Docker
-  para todos los clientes. Rubro mal escrito → tema `almacen` + aviso en el log.
+- **Una instalación = un negocio** (tienda única con sucursales). Abre tiendas el
+  admin (el cliente) y, para sucursales, el propietario de una tienda. Cualquier
+  otro usuario: `403 CREAR_TIENDA_NO_PERMITIDO`. El admin no tiene tope de
+  sucursales por plan.
+  - Portada sin sesión: marca + sucursales; con una sola, "Ver productos".
+  - Menú: "Productos" (una sucursal) o "Sucursales" en el mapa (varias). Se quitó
+    "¿Tenés un comercio? Publicá tu tienda"; el admin sin tiendas ve "Abrí la tienda
+    de {marca}".
+- **Configuración de la instalación** (tabla `instalacion`, fila única): tema
+  (rubro), nombre, eslogan, descripción, logo y provincia. Precedencia: lo que
+  guardó el admin → variable `PERMIA_*` → default. Se edita en
+  `/admin/instalacion` ("Marca y tema"), sin redeploy.
 - **Temas**: `almacen`, `bebidas`, `vinos`, `vivero`. Cada uno con paleta,
   tipografía, radios, ícono de marca (tienda/botella/copa/planta) y textos. Todos
   cumplen contraste 4,5:1 (lo verifican los tests).
 - El naranja de `almacen` se oscureció (`#e2723a` → `#c2561f`) porque con texto
   blanco no llegaba a 4,5:1.
-- Las features y el modelo de datos son los de Almacenia, sin cambios.
+- **Logo**: se sube desde el admin (`tipo=logo`), sin comprimir para no perder la
+  transparencia. Se usa en la portada y como favicon. Los pines del mapa siguen con
+  el ícono del rubro.
+- **Provincia**: las 24 jurisdicciones (`src/lib/region/provincias.ts`), con capital
+  y rectángulo aproximado. Define "toda la provincia" del plan plata y el centro del
+  mapa sin ubicación. Default: San Juan (`PERMIA_PROVINCIA`).
+- **Sin datos demo**: se quitaron `prisma/seed.ts`, `src/lib/seed/` y `RUN_SEED`.
 
 ### Preguntas abiertas de Permia
 
-- **¿Marketplace o tienda única?** Una distribuidora es un solo negocio; Almacenia
-  es un marketplace de muchas tiendas con mapa. ¿Cada instalación de Permia muestra
-  solo la tienda del cliente (sin mapa de "tiendas cercanas", con sucursales), o
-  queda multi-tienda?
-- **Datos de demo por rubro**: seed de productos y categorías de bebidas, vinos y
-  plantas para mostrarle a cada cliente (hoy el seed es el de almacenes de San Juan).
-- **Región**: el radio de alcance y la vitrina están centrados en San Juan.
-  ¿Configurable por cliente?
-- **Selector de tema en el panel admin**, sin tocar variables.
-- **Logo propio** del cliente (hoy: ícono del rubro + nombre).
+- **Alcance por plan en una tienda única:** el mapa sigue limitando por radio según
+  el plan y los puntos del comprador (`18-alcance.md`). Con un solo negocio, un
+  comprador free a más de 3 km no ve la sucursal en el mapa, aunque sí la ve en la
+  portada y el menú. ¿Se quita el límite en Permia, o el radio pasa a significar
+  otra cosa (por ejemplo, zona de envío)?
+- **Planes, puntos, publicidad y "Listas de compras / compará precios"** vienen del
+  marketplace. ¿Cuáles tienen sentido para un solo negocio?
 - **Estilo del vivero desde las webs de referencia** (`viverolaslilas-a` y `-b` de
   Domo): guardado en [`design_vivero.md`](design_vivero.md) (tokens, tipografía,
   componentes y SVG textuales de la A; de la B solo las fuentes, falta su HTML).

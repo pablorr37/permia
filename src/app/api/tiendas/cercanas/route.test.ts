@@ -134,4 +134,16 @@ describe("GET /api/tiendas/cercanas con sesión (radio de alcance)", () => {
     const jachal = body.data.find((t: { nombre: string }) => t.nombre.startsWith("Jáchal"));
     expect(jachal.distanciaKm).toBeGreaterThan(100);
   });
+
+  it("plata: 'toda la provincia' es la de la instalación (22-instalacion.md §2)", async () => {
+    await prisma.usuario.update({ where: { id: comprador.id }, data: { plan: "plata" } });
+    await prisma.instalacion.upsert({ where: { id: 1 }, create: { id: 1, provincia: "mendoza" }, update: { provincia: "mendoza" } });
+    try {
+      const body = await (await GET(req(`lat=${LAT_SJ}&lon=${LON_SJ}&radioKm=1`))).json();
+      expect(nombres(body).some((n) => n.startsWith("Mendoza"))).toBe(true);
+      expect(nombres(body).some((n) => n.startsWith("Jáchal"))).toBe(false);
+    } finally {
+      await prisma.instalacion.deleteMany({});
+    }
+  });
 });

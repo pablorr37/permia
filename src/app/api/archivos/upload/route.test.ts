@@ -72,6 +72,20 @@ describe("POST /api/archivos/upload", () => {
     expect(body.data.url).toBeTruthy();
   });
 
+  it("tipo=logo (22-instalacion.md): 201 para el admin, sin entidadId, en logo/instalacion", async () => {
+    obtenerUsuarioActualMock.mockResolvedValue({ ...dueno, esAdmin: true });
+    const res = await POST(reqConArchivo(`http://localhost/api/archivos/upload?tipo=logo`));
+    expect(res.status).toBe(201);
+    expect(subirArchivoMock).toHaveBeenCalledWith(expect.objectContaining({ tipo: "logo", entidadId: "instalacion" }));
+  });
+
+  it("tipo=logo: 403 si no es admin", async () => {
+    obtenerUsuarioActualMock.mockResolvedValue(dueno);
+    const res = await POST(reqConArchivo(`http://localhost/api/archivos/upload?tipo=logo`));
+    expect(res.status).toBe(403);
+    expect(subirArchivoMock).not.toHaveBeenCalled();
+  });
+
   it("201 sube la foto de la tienda propia", async () => {
     obtenerUsuarioActualMock.mockResolvedValue(dueno);
     const res = await POST(

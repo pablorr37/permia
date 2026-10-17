@@ -41,8 +41,7 @@ levantar la infraestructura y [`agents/`](agents/) para el orquestador y su memo
 
 ## Datos de terceros
 
-- Mapa y ubicaciones del seed de demo: © colaboradores de
-  [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL). Los nombres de
-  las tiendas del seed son de fantasía.
+- Mapa: © colaboradores de
+  [OpenStreetMap](https://www.openstreetmap.org/copyright) (ODbL).
 - Fotos del banco que vienen de la web: [Openverse](https://openverse.org), solo
   CC0 o dominio público (`specs/sdd/16-banco-fotos.md`).

@@ -1,13 +1,12 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
-import { TemaProvider } from "@/components/tema/TemaProvider";
-import type { Tema } from "@/lib/tema/tema";
+import { TemaProvider, type InstalacionCliente } from "@/components/tema/TemaProvider";
 
-export function Providers({ tema, children }: { tema: Tema; children: React.ReactNode }) {
+export function Providers({ instalacion, children }: { instalacion: InstalacionCliente; children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <TemaProvider tema={tema}>{children}</TemaProvider>
+      <TemaProvider instalacion={instalacion}>{children}</TemaProvider>
     </SessionProvider>
   );
 }

@@ -85,8 +85,21 @@ export function MenuInicio() {
       .then((a) => setPlan(a.plan))
       .catch(() => {});
   }, []);
+  // 22-instalacion.md §3: sucursales del negocio (para "Productos"/"Sucursales") y si
+  // el usuario es admin (solo el admin abre la primera tienda).
+  const [sucursales, setSucursales] = useState<{ id: string }[] | null>(null);
+  const [esAdmin, setEsAdmin] = useState(false);
+  useEffect(() => {
+    apiGet<{ id: string }[]>("/api/tiendas")
+      .then(setSucursales)
+      .catch(() => setSucursales([]));
+    apiGet("/api/admin/instalacion")
+      .then(() => setEsAdmin(true))
+      .catch(() => {});
+  }, []);
   const propias = lista?.filter((m) => m.rol === "propietario").length ?? 0;
-  const tope = plan ? MAX_TIENDAS[plan] : null;
+  // 22-instalacion.md §3: el admin (el negocio) no tiene tope de sucursales.
+  const tope = plan && !esAdmin ? MAX_TIENDAS[plan] : null;
   const llegoAlTope = tope !== null && propias >= tope;
   const siguiente = plan ? planSiguiente(plan) : null;
   const nombre = session?.user?.name?.split(" ")[0];
@@ -185,16 +198,29 @@ export function MenuInicio() {
             </Link>
           )}
         </section>
-      ) : (
+      ) : esAdmin ? (
         <Link
           href="/mi-tienda?nueva=1"
           className="press-soft flex items-center justify-between gap-3 rounded-card border border-dashed border-primary/50 bg-primary-soft/50 px-4 py-3.5"
         >
           <span className="flex flex-col">
-            <span className="text-[15px] font-semibold text-primary-dark">¿Tenés un comercio?</span>
-            <span className="text-[12px] text-text-2">Publicá tu tienda y vendé desde el celular.</span>
+            <span className="text-[15px] font-semibold text-primary-dark">Abrí la tienda de {marca}</span>
+            <span className="text-[12px] text-text-2">Cargá tus productos y empezá a vender.</span>
           </span>
-          <span className="text-[13px] font-bold text-primary-dark">Publicar →</span>
+          <span className="text-[13px] font-bold text-primary-dark">Abrir →</span>
+        </Link>
+      ) : null}
+
+      {esAdmin && (
+        <Link
+          href="/admin/instalacion"
+          className="press-soft flex items-center justify-between gap-3 rounded-card border border-border bg-surface px-4 py-3 shadow-card"
+        >
+          <span className="flex flex-col">
+            <span className="text-[14px] font-semibold text-text">Marca y tema</span>
+            <span className="text-[12px] text-text-2">Logo, estilo, textos y provincia</span>
+          </span>
+          <span className="text-[13px] font-bold text-accent-text">Configurar →</span>
         </Link>
       )}
 
@@ -203,7 +229,12 @@ export function MenuInicio() {
           Comprar
         </h2>
         <div className="grid grid-cols-2 gap-2.5">
-          <Acceso href="/mapa" icono={ICONOS.mapa} titulo="Mapa" detalle="Tiendas en tu alcance" destacado={!activa} i={0} />
+          {sucursales && sucursales.length === 1 && (
+            <Acceso href={`/tiendas/${sucursales[0].id}`} icono={ICONOS.stock} titulo="Productos" detalle="Catálogo y pedidos" destacado={!activa} i={0} />
+          )}
+          {sucursales && sucursales.length > 1 && (
+            <Acceso href="/mapa" icono={ICONOS.mapa} titulo="Sucursales" detalle="En el mapa" destacado={!activa} i={0} />
+          )}
           <Acceso href="/listas" icono={ICONOS.lista} titulo="Listas de compras" detalle="Compará precios" i={1} />
           <Acceso href="/perfil/pedidos" icono={ICONOS.misPedidos} titulo="Mis pedidos" i={2} />
           <Acceso href="/perfil/puntos" icono={ICONOS.puntos} titulo="Mis puntos" detalle="Suman alcance" i={3} />

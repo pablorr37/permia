@@ -3,6 +3,7 @@ import { buscarTiendasCercanas } from "@/lib/tiendas/tiendas";
 import { respuestaExitosa, respuestaError } from "@/lib/api-response";
 import { obtenerUsuarioActual } from "@/lib/auth/session";
 import { obtenerAlcance } from "@/lib/alcance/alcance";
+import { obtenerInstalacion } from "@/lib/instalacion/instalacion";
 
 // Datos vivos (tiendas visibles según estado de cuenta): siempre en el momento (00-overview.md, "Sin caché").
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ export async function GET(request: NextRequest) {
       lon,
       radioKm: radioKmParam !== null ? Number(radioKmParam) : undefined,
       alcanceKm: alcance ? alcance.radioKm : undefined,
+      provincia: alcance?.radioKm === null ? (await obtenerInstalacion()).provincia : undefined,
     });
     return respuestaExitosa(resultado);
   } catch (error) {
