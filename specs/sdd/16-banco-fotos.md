@@ -115,6 +115,9 @@ Los curadores ven también las fotos pendientes y rechazadas (para revisarlas).
 
 ### Seed
 
+> **Permia:** no hay seed de demo (`22-instalacion.md` §4). Esta sección queda como
+> referencia de Almacenia.
+
 El seed usa las mismas funciones: para cada producto del catálogo busca en el banco
 (`mejorFotoDelBanco`, con la visibilidad de un curador pero solo fotos `aprobada`) y
 usa la mejor; si no hay, el producto queda **sin foto** (la UI muestra el ícono de

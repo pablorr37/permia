@@ -301,32 +301,9 @@ La password tiene que tener al menos 8 caracteres (`PASSWORD_DEBIL`). Si el emai
 promovida, entrá a `/admin` para ver métricas, verificaciones, usuarios,
 productos y ventas.
 
-## 10. Seed de demo: 100 tiendas reales con nombres de fantasía
+## 10. Sin datos de demo
 
-El seed (`prisma/seed.ts`) viene en la imagen. Para sembrar 100 tiendas con
-ubicaciones reales de comercios de barrio del Gran San Juan (datos públicos de
-OpenStreetMap, © colaboradores de OpenStreetMap, licencia ODbL) y **nombres de
-fantasía parecidos a los reales** (nunca el real), sin compradores:
-
-```bash
-docker ps --format '{{.Names}}' | grep -i almacenia   # nombre del contenedor de la app
-docker exec -it <NOMBRE> sh -c 'cd /app && SEED_FUENTE=osm SEED_TIENDAS=100 SEED_COMPRADORES=0 node_modules/.bin/tsx prisma/seed.ts'
-```
-
-(O pegar solo lo de adentro del `sh -c` en la pestaña **Terminal** del recurso.)
-
-| Variable           | Default | Qué hace |
-| ------------------ | ------- | -------- |
-| `SEED_TIENDAS`     | `20`    | Cantidad de tiendas. |
-| `SEED_FUENTE`      | `local` | `osm`: consulta Overpass (OpenStreetMap). Si falla o trae menos, completa con tiendas generadas; el log dice cuántas vinieron de OSM. |
-| `SEED_COMPRADORES` | `12`    | `0`: no crea compradores, reseñas ni la lista demo. |
-| `SEED_FOTOS_WEB`   | —       | `1`: para cada producto de catálogo sin foto, busca una foto libre (Openverse) y la deja **pendiente** en `/admin/fotos`. |
-
-- Es idempotente: borra solo usuarios `@seed.almacenia.test` y lo que cuelga de
-  ellos. No toca el catálogo (se reutiliza por nombre), el banco de fotos ni
-  cuentas reales (p. ej. el admin).
-- Contraseña de todos los vendedores seed: `password123`.
-- Fotos: nunca al azar. Cada producto usa la mejor foto **aprobada** del banco
-  (`16-banco-fotos.md`); si no hay, queda sin foto. Flujo recomendado: correr con
-  `SEED_FOTOS_WEB=1`, revisar las pendientes en `/admin/fotos` (y buscar más con
-  "Buscar y aprobar fotos"), y volver a correr el seed para que las tome.
+Permia no trae seed de demo (`specs/sdd/22-instalacion.md` §4): cada cliente
+arranca vacío y carga sus productos. El admin abre la tienda desde el inicio
+("Abrí la tienda de …") y configura marca, logo, tema y provincia en
+`/admin/instalacion`.

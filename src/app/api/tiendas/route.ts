@@ -1,8 +1,20 @@
 import { NextRequest } from "next/server";
-import { crearTienda } from "@/lib/tiendas/tiendas";
+import { crearTienda, exigirPuedeCrearTienda, listarSucursales } from "@/lib/tiendas/tiendas";
 import { obtenerUsuarioActual } from "@/lib/auth/session";
 import { respuestaExitosa, respuestaError } from "@/lib/api-response";
 import { AppError } from "@/lib/errors";
+
+// Datos vivos (00-overview.md, "Sin caché").
+export const dynamic = "force-dynamic";
+
+// Sucursales del negocio, pública (22-instalacion.md §3).
+export async function GET() {
+  try {
+    return respuestaExitosa(await listarSucursales());
+  } catch (error) {
+    return respuestaError(error);
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +22,9 @@ export async function POST(request: NextRequest) {
     if (!usuario) {
       throw new AppError("NO_AUTENTICADO", "Necesitás iniciar sesión.");
     }
+
+    // 22-instalacion.md §3: tienda única, solo el negocio abre sucursales.
+    await exigirPuedeCrearTienda(usuario);
 
     const body = await request.json();
     const tienda = await crearTienda(usuario, {

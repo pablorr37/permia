@@ -4,7 +4,7 @@ import { useState, type ChangeEvent } from "react";
 import { apiUpload, ApiError } from "@/lib/api-client";
 import { comprimirImagen, mensajeErrorSubida } from "@/lib/archivos/comprimir-imagen";
 
-type TipoArchivo = "tienda" | "producto" | "catalogo" | "avatar";
+type TipoArchivo = "tienda" | "producto" | "catalogo" | "avatar" | "logo";
 
 interface ImageUploadFieldProps {
   tipo: TipoArchivo;
@@ -16,6 +16,7 @@ interface ImageUploadFieldProps {
   textoSubir?: string;
 }
 
+// El logo no se comprime: comprimir lo pasa a JPEG y pierde la transparencia.
 // Sube directo a /api/archivos/upload (08-archivos.md) al elegir el archivo, sin
 // paso intermedio de "guardar" — onSubido entrega la url para que el formulario
 // que lo usa la persista en imagenUrl/avatarUrl del recurso que corresponda.
@@ -30,10 +31,10 @@ export function ImageUploadField({ tipo, entidadId, valorActual, onSubido, label
     setSubiendo(true);
     setError(null);
     try {
-      const entidadQuery = tipo === "avatar" ? "" : `&entidadId=${entidadId}`;
+      const entidadQuery = tipo === "avatar" || tipo === "logo" ? "" : `&entidadId=${entidadId}`;
       const resultado = await apiUpload<{ url: string }>(
         `/api/archivos/upload?tipo=${tipo}${entidadQuery}`,
-        await comprimirImagen(archivo)
+        tipo === "logo" ? archivo : await comprimirImagen(archivo)
       );
       onSubido(resultado.url);
     } catch (err) {

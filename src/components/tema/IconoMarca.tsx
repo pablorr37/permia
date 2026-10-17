@@ -34,3 +34,22 @@ export function IconoMarca({ className = "h-5 w-5" }: { className?: string }) {
     </svg>
   );
 }
+
+// Marca de la portada (22-instalacion.md): el logo del cliente si lo subió; si no,
+// el ícono del rubro en un cuadrado del color primario.
+export function LogoMarca({ className = "h-11 w-11", style }: { className?: string; style?: React.CSSProperties }) {
+  const { logoUrl, marca } = useTema();
+  if (logoUrl) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={logoUrl} alt={marca} className={`${className} rounded-control object-contain`} style={style} />;
+  }
+  return (
+    <span
+      className={`${className} flex items-center justify-center rounded-control bg-primary text-white shadow-cta`}
+      style={style}
+      aria-hidden="true"
+    >
+      <IconoMarca className="h-[55%] w-[55%]" />
+    </span>
+  );
+}

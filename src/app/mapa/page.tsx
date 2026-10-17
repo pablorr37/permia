@@ -9,7 +9,7 @@ import { apiGet, ApiError } from "@/lib/api-client";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { EstadoAperturaPill } from "@/components/ui/EstadoAperturaPill";
 import { IconoMarca } from "@/components/tema/IconoMarca";
-import { useTema } from "@/components/tema/TemaProvider";
+import { useProvincia, useTema } from "@/components/tema/TemaProvider";
 import { PuntosChip } from "@/components/ui/PuntosChip";
 import type { TiendaMapa } from "@/components/ui/TiendaMap";
 import { estadoApertura } from "@/lib/tiendas/horarios";
@@ -55,6 +55,7 @@ export default function MapaPage() {
 
 function MapaAutenticado() {
   const { marca } = useTema();
+  const provincia = useProvincia();
   const [origen, setOrigen] = useState<{ lat: number; lon: number } | null>(null);
   const [tiendas, setTiendas] = useState<Tienda[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -64,21 +65,23 @@ function MapaAutenticado() {
   const ahora = useAhora();
 
   useEffect(() => {
+    // Sin ubicación, el mapa arranca en la capital de la provincia de la instalación
+    // (22-instalacion.md §2).
+    const usarCapital = (motivo: string) => {
+      setError(`${motivo} Te mostramos ${provincia.nombre}.`);
+      setOrigen(provincia.capital);
+    };
     if (!navigator.geolocation) {
-      setError("Tu navegador no soporta geolocalización.");
-      setCargando(false);
+      usarCapital("Tu navegador no soporta geolocalización.");
       return;
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setOrigen({ lat: pos.coords.latitude, lon: pos.coords.longitude });
       },
-      () => {
-        setError("No pudimos acceder a tu ubicación. Permitila para ver tiendas cercanas.");
-        setCargando(false);
-      },
+      () => usarCapital("No pudimos acceder a tu ubicación."),
     );
-  }, []);
+  }, [provincia]);
 
   const cargarTiendas = useCallback(() => {
     if (!origen) return;
@@ -168,7 +171,7 @@ function MapaAutenticado() {
           style={{ animationDelay: "120ms" }}
         >
           <span className="text-[13px] font-bold text-primary-dark tabular-nums">
-            {alcance.radioKm === null ? "Toda San Juan" : `Alcance ${formatoKm(alcance.radioKm)} km`}
+            {alcance.radioKm === null ? `Toda ${provincia.nombre}` : `Alcance ${formatoKm(alcance.radioKm)} km`}
           </span>
           {alcance.proximoUmbral && (
             <span className="text-[11px] text-text-2 tabular-nums">

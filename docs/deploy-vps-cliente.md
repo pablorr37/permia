@@ -27,21 +27,30 @@ entorno**. El rubro (`PERMIA_RUBRO`) define todo el estilo del frontend
    ```env
    PERMIA_RUBRO=bebidas
    PERMIA_NOMBRE=Distribuidora Don Pepe
+   PERMIA_PROVINCIA=mendoza
    # opcionales:
    PERMIA_ESLOGAN=Bien frías, en tu puerta.
    PERMIA_DESCRIPCION=Gaseosas, aguas y cervezas por bulto o por unidad.
    ```
    `AUTH_SECRET`, credenciales de DB y de S3: **siempre nuevas para cada cliente**.
 7. **Dominio** del cliente apuntando a la IP del VPS (registro A), con HTTPS (§6).
-8. **Admin**: promové la cuenta del cliente a admin (§9).
+8. **Admin**: promové la cuenta del cliente a admin (§9). Con esa cuenta, el
+   cliente:
+   - abre su tienda desde el inicio ("Abrí la tienda de …"); después suma
+     sucursales desde "Nueva sucursal". Nadie más puede abrir tiendas: cada
+     instalación es **un solo negocio** (`specs/sdd/22-instalacion.md`);
+   - en **Marca y tema** (`/admin/instalacion`) sube su logo, elige el tema, ajusta
+     los textos y la provincia. Lo que guarda ahí le gana a las variables.
+   - No hay datos de demo: arranca vacío y carga sus productos.
 9. **Verificación** (§8): la portada muestra la marca, el ícono y los colores del
    rubro. Si en el log aparece `[tema] PERMIA_RUBRO="…" no es un rubro conocido`,
    está mal escrito el rubro (la app sigue funcionando con el tema `almacen`).
 
-## Cambiar el rubro o el nombre de un cliente
+## Cambiar el rubro, el nombre o la provincia de un cliente
 
-Se leen en runtime: cambiá la variable en Coolify y **reiniciá** el contenedor. No
-hace falta rebuild.
+Lo más simple: el cliente (admin) lo cambia en `/admin/instalacion`, sin reiniciar
+nada. Las variables `PERMIA_*` son solo el valor inicial: si cambiás una en Coolify
+(y reiniciás el contenedor), rige solo mientras el admin no haya guardado ese campo.
 
 ## Agregar un rubro nuevo
 

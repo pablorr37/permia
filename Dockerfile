@@ -25,8 +25,9 @@ COPY --from=builder /app/.next/static ./.next/static
 # aparte junto con el schema/migraciones que necesita para saber qué aplicar.
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma7.config.ts ./prisma7.config.ts
-# prisma/seed.ts reutiliza funciones de src/lib (no las reimplementa) — se copia
-# la carpeta para poder seedear en runtime via RUN_SEED=true (ver docker-entrypoint.sh).
+# Los scripts de operación (scripts/crear-admin.ts) reutilizan funciones de src/lib:
+# se copia la carpeta para poder correrlos con tsx. Permia no trae seed de demo
+# (specs/sdd/22-instalacion.md §4).
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/tsconfig.json ./tsconfig.json
 # Scripts de operación (p. ej. scripts/crear-admin.ts) para correr con

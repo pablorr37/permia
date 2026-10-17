@@ -1,16 +1,32 @@
 "use client";
 
-// Tema de la instalación para los componentes cliente (specs/sdd/21-temas.md). El
-// layout lo resuelve en el server y lo pasa por Providers.
+// Tema y datos de la instalación para los componentes cliente (21-temas.md,
+// 22-instalacion.md). El layout los resuelve en el server y los pasa por Providers.
 import { createContext, useContext } from "react";
 import { TEMAS, type Tema } from "@/lib/tema/tema";
+import { parsearProvincia, PROVINCIA_POR_DEFECTO, type Provincia } from "@/lib/region/provincias";
 
-const TemaContext = createContext<Tema>(TEMAS.almacen);
-
-export function TemaProvider({ tema, children }: { tema: Tema; children: React.ReactNode }) {
-  return <TemaContext.Provider value={tema}>{children}</TemaContext.Provider>;
+export interface InstalacionCliente {
+  tema: Tema;
+  logoUrl: string | null;
+  provincia: Provincia;
 }
 
-export function useTema(): Tema {
-  return useContext(TemaContext);
+const InstalacionContext = createContext<InstalacionCliente>({
+  tema: TEMAS.almacen,
+  logoUrl: null,
+  provincia: parsearProvincia(PROVINCIA_POR_DEFECTO)!,
+});
+
+export function TemaProvider({ instalacion, children }: { instalacion: InstalacionCliente; children: React.ReactNode }) {
+  return <InstalacionContext.Provider value={instalacion}>{children}</InstalacionContext.Provider>;
+}
+
+export function useTema(): Tema & { logoUrl: string | null } {
+  const { tema, logoUrl } = useContext(InstalacionContext);
+  return { ...tema, logoUrl };
+}
+
+export function useProvincia(): Provincia {
+  return useContext(InstalacionContext).provincia;
 }

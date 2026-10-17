@@ -641,6 +641,21 @@ model ConfiguracionSistema {
   @@map("configuracion_sistema")
 }
 
+// 22-instalacion.md: configuración de la instalación (fila única, id = 1). NULL =
+// sin valor del admin (rige la variable de entorno o el default).
+model Instalacion {
+  id            Int      @id @default(1)
+  rubro         String?
+  nombre        String?
+  eslogan       String?
+  descripcion   String?
+  logoUrl       String?  @map("logo_url")
+  provincia     String?
+  actualizadaEn DateTime @default(now()) @updatedAt @map("actualizada_en")
+
+  @@map("instalacion")
+}
+
 // ---------------------------------------------------------------------------
 // 14-listas-compras.md
 // ---------------------------------------------------------------------------

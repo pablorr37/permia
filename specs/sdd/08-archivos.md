@@ -48,9 +48,12 @@ llamador guarda en el campo `imagenUrl`/`avatarUrl` que corresponda (`Usuario`,
 ### `POST /api/archivos/upload`
 
 Requiere sesión válida. `Content-Type: multipart/form-data` con un único campo
-`archivo`. Query param `?tipo=tienda|producto|catalogo|avatar&entidadId=<id>` para que el
+`archivo`. Query param `?tipo=tienda|producto|catalogo|avatar|logo&entidadId=<id>` para que el
 endpoint valide ownership antes de subir (`entidadId` no aplica para `avatar`, es
 siempre el propio usuario).
+
+`tipo=logo` (Permia, `22-instalacion.md`): logo de la instalación, solo admin, sin
+`entidadId` (la key va en `logo/instalacion/<uuid>.<ext>`).
 
 Response `201`: `{ data: { url: string } }`.
 
